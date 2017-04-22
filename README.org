@@ -1,3 +1,8 @@
 * Gitlab Workflow
 
 Gitlab on Alfred
+
+** Setup
+
+1. `gitlab username {gitlab_username}` - Required to use `lab my`, `lab star`.
+2. `gitlab password {gitlab_password}` - A Gitlab Application Token can be used in replace of (Recommended)
