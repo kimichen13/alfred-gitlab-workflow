@@ -5,12 +5,12 @@ require_once('workflows.php');
 
 $w = new Workflows();
 
-$username = $w->get( 'gitlab.username', 'settings.plist' );
+$email = $w->get( 'gitlab.email', 'settings.plist' );
 $password = $w->get( 'gitlab.password', 'settings.plist' );
 $baseurl = $w->get( 'gitlab.baseurl', 'settings.plist' );
 
-if (!$username) {
-	$w->result( 'git-username', 'https://github.com/kimichen13/alfred-gitlab-workflow#Setup', 'Gitlab Username Required', 'Press Enter to see documentation on how to set up.', 'icon.png', 'yes' );
+if (!$email) {
+	$w->result( 'git-email', 'https://github.com/kimichen13/alfred-gitlab-workflow#Setup', 'Gitlab Email Required', 'Press Enter to see documentation on how to set up.', 'icon.png', 'yes' );
 }
 if (!$password) {
 	$w->result( 'git-password', 'https://github.com/kimichen13/alfred-gitlab-workflow/tree/develop#Setup', 'Gitlab Password/Token Required', 'Press Enter to see documentation on how to set up.', 'icon.png', 'yes' );
@@ -21,68 +21,23 @@ if (!$baseurl) {
 
 if ( count( $w->results() ) == 0 ){
 	// Test
-	// $url = "https://api.github.com/rate_limit";
-	// if($username && $password) {
-	// 	exec('sh auth.sh -u '.escapeshellarg($username).' -p '.escapeshellarg($password).' --url '.escapeshellarg($url), $output, $return_var);
-		
-	// 	$data = implode($output);
-		
-	// 	$data = substr($data, strrpos($data, "X-Gitlab-Request-Id")); // clean string
-	// 	preg_match("/([\[{])/", $data, $matches, PREG_OFFSET_CAPTURE);
-	// 	$start = $matches[0][1];
-	// 	$end = max(strrpos($data, "}"), strrpos($data, "]"))+1;
-	// 	$data = substr($data, $start, $end-$start);
-		
-	// 	$msg = json_decode( $data );
-	// } else {
-	// 	$data = $w->request( $url );
-	// 	$msg = json_decode( $data );
-	// }
-	
-	// if (isset($msg->message)) {
-	// 	$w->result( $msg-> message, $msg->message, 'Gitlab Limit', $msg->message, 'icon.png', 'no' );
-	// }
-	// if (isset($msg->rate->remaining) && $msg->rate->remaining <= 60) {
-	// 	$w->result( 'git-test', null, 'Test Unsuccessful', 'Want more Workflows? Check out a few below.', 'icon.png', 'no' );
-	// } else {
-	// 	$w->result( 'git-test', null, 'Test Successful', 'Want more Workflows? Check out a few below.', 'icon.png', 'no' );
-	// }
+	$url = $baseurl."/api/v3/session";
+    $login = false;
+	if($email && $password) {
+		exec('sh auth.sh -e '.escapeshellarg($email).' -p '.escapeshellarg($password).' --url '.escapeshellarg($url), $output, $return_var);
 
-	// Support
-	$query = "alfred @kimichen13";
-	$url = "https://api.github.com/legacy/repos/search/".urlencode($query);
-	
-	if($username && $password) {
-		exec('clear; sh auth.sh -u '.escapeshellarg($username).' -p '.escapeshellarg($password).' --url '.escapeshellarg($url), $output, $return_var);
-	
-		$data = implode($output);
-		
-		$data = substr($data, strrpos($data, "X-GitHub-Request-Id")); // clean string
-		preg_match("/([\[{])/", $data, $matches, PREG_OFFSET_CAPTURE);
-		$start = $matches[0][1];
-		$end = max(strrpos($data, "}"), strrpos($data, "]"))+1;
-		$data = substr($data, $start, $end-$start);
-		
-		$return = json_decode( $data );
-	} else {
-		$data = $w->request( $url );
-		$return = json_decode( $data );
-	}
-	
-	if (isset($return->repositories)) {
-		// test passed
-		$repos = $return->repositories;
-		foreach($repos as $repo ) {
-			$repo->full_name = $repo->username."/".$repo->name;
-			$repo->html_url = $repo->url;
-			$w->result( 'git-'.$repo->full_name, $repo->html_url, $repo->full_name, $repo->description, 'icon.png', 'yes' );
-		}
+        $response = implode($output);
+		$data = substr($response, (strpos($response, $url) + strlen($url)));
+		$msg = json_decode( $data );
+        $w->set( 'gitlab.token', $msg->{'private_token'}, 'settings.plist' );
+        $login = true;
 	}
 
-}
-
-if ( count( $w->results() ) == 0 ){
-	$w->result( 'git', null, 'No Repository found', 'No Repository found that match your query', 'icon.png', 'no' );
+    if ($login){
+        $w->result( 'git-test', null, 'Test Successful', '', 'icon.png', 'no' );
+    } else {
+        $w->result( 'git-test', null, 'Test Unsuccessful', '', 'icon.png', 'no' );
+    }
 }
 
 echo $w->toxml();

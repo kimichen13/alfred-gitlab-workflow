@@ -6,6 +6,6 @@ if (!isset($query)) {
            {query}
 EOD;
 }
-$w->set( 'gitlab.username', $query, 'settings.plist' );
-echo 'Set Alfred Gitlab Username '.$query;
+$w->set( 'gitlab.email', $query, 'settings.plist' );
+echo 'Set Alfred Gitlab Email '.$query;
 ?>
